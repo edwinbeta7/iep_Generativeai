@@ -22,7 +22,7 @@
 <script type="module">
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI("AIzaSyBRwBkxpOsZj7US1nIMxW0m4AZ7BH2Yldw");
+const genAI = new GoogleGenerativeAI("TU_API_KEY");
 
 async function generateImage() {
     const prompt = document.getElementById("prompt").value;
@@ -42,8 +42,11 @@ async function generateImage() {
     const imageBase64 = response.image.base64;
     resultDiv.innerHTML = `<img src="data:image/png;base64,${imageBase64}" />`;
 }
+
+// 👇 ESTA LÍNEA ES LA SOLUCIÓN
+window.generateImage = generateImage;
+
 </script>
 
 </body>
 </html>
-

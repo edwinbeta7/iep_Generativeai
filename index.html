@@ -4,7 +4,7 @@
     <title>Generador de Imágenes con Gemini</title>
     <style>
         body { font-family: Arial; padding: 20px; }
-        textarea { width: 100%; height: 100px; }
+        textarea { width: 100%; height: 120px; }
         img { margin-top: 20px; max-width: 100%; }
     </style>
 </head>
@@ -15,36 +15,49 @@
 
 <textarea id="prompt" placeholder="Describe la imagen..."></textarea>
 <br><br>
-<button onclick="generateImage()">Generar imagen</button>
+<button id="btn">Generar imagen</button>
 
 <div id="result"></div>
 
 <script type="module">
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI("TU_API_KEY");
+// --- INICIALIZAR GEMINI ---
+const genAI = new GoogleGenerativeAI("TAIzaSyBRwBkxpOsZj7US1nIMxW0m4AZ7BH2Yldw");
 
-async function generateImage() {
+// --- HACER GLOBAL LA FUNCIÓN ---
+window.generateImage = async function () {
     const prompt = document.getElementById("prompt").value;
-
-    const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash"
-    });
-
     const resultDiv = document.getElementById("result");
     resultDiv.innerHTML = "<p>Generando imagen...</p>";
 
-    const response = await model.generateImage({
-        prompt,
-        size: "1024x1024"
-    });
+    try {
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash"
+        });
 
-    const imageBase64 = response.image.base64;
-    resultDiv.innerHTML = `<img src="data:image/png;base64,${imageBase64}" />`;
-}
+        // Imagen generada desde texto (SDK nuevo)
+        const response = await model.generateContent({
+            contents: [{
+                role: "user",
+                parts: [{ text: prompt }]
+            }],
+            generationConfig: {
+                responseMimeType: "image/png"
+            }
+        });
 
-// 👇 ESTA LÍNEA ES LA SOLUCIÓN
-window.generateImage = generateImage;
+        const imageBase64 = response.response.candidates[0].content.parts[0].inlineData.data;
+
+        resultDiv.innerHTML = `<img src="data:image/png;base64,${imageBase64}" />`;
+
+    } catch (error) {
+        resultDiv.innerHTML = "<p>Error: " + error + "</p>";
+    }
+};
+
+// Conectar botón → función global
+document.getElementById("btn").onclick = window.generateImage;
 
 </script>
 

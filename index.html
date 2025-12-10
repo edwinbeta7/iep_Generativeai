@@ -4,17 +4,17 @@
     <title>Generador de Imágenes con Gemini</title>
     <style>
         body { font-family: Arial; padding: 20px; }
-        textarea { width: 100%; height: 120px; }
-        img { margin-top: 20px; max-width: 100%; }
+        textarea { width: 100%; height: 100px; }
+        img { margin-top: 20px; max-width: 100%; border: 1px solid #ccc; }
+        button { padding: 10px 20px; }
     </style>
 </head>
 <body>
 
-<h1>Generador de Imágenes – Gemini AI</h1>
+<h1>Generador de Imágenes – Gemini 1.5 Flash</h1>
 <p>Escribe una descripción detallada y genera una imagen personalizada.</p>
 
-<textarea id="prompt" placeholder="Describe la imagen..."></textarea>
-<br><br>
+<textarea id="prompt" placeholder="Describe la imagen..."></textarea><br><br>
 <button id="btn">Generar imagen</button>
 
 <div id="result"></div>
@@ -22,11 +22,12 @@
 <script type="module">
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-// --- INICIALIZAR GEMINI ---
-const genAI = new GoogleGenerativeAI("AIzaSyBRwBkxpOsZj7US1nIMxW0m4AZ7BH2Yldw");
+const API_KEY = "AIzaSyBRwBkxpOsZj7US1nIMxW0m4AZ7BH2Yldw";  // Reemplázala
+const genAI = new GoogleGenerativeAI(API_KEY);
 
-// --- HACER GLOBAL LA FUNCIÓN ---
-window.generateImage = async function () {
+document.getElementById("btn").onclick = generateImage;
+
+async function generateImage() {
     const prompt = document.getElementById("prompt").value;
     const resultDiv = document.getElementById("result");
     resultDiv.innerHTML = "<p>Generando imagen...</p>";
@@ -36,31 +37,29 @@ window.generateImage = async function () {
             model: "gemini-1.5-flash"
         });
 
-        // Imagen generada desde texto (SDK nuevo)
         const response = await model.generateContent({
-            contents: [{
-                role: "user",
-                parts: [{ text: prompt }]
-            }],
+            contents: [
+                {
+                    role: "user",
+                    parts: [{ text: prompt }]
+                }
+            ],
             generationConfig: {
                 responseMimeType: "image/png"
             }
         });
 
-        const imageBase64 = response.response.candidates[0].content.parts[0].inlineData.data;
+        const base64 =
+            response.response.candidates[0].content.parts[0].inlineData.data;
 
-        resultDiv.innerHTML = `<img src="data:image/png;base64,${imageBase64}" />`;
+        resultDiv.innerHTML = `<img src="data:image/png;base64,${base64}" />`;
 
-    } catch (error) {
-        resultDiv.innerHTML = "<p>Error: " + error + "</p>";
+    } catch (e) {
+        console.error(e);
+        resultDiv.innerHTML = "<p>Error al generar la imagen.</p>";
     }
-};
-
-// Conectar botón → función global
-document.getElementById("btn").onclick = window.generateImage;
-
+}
 </script>
 
 </body>
 </html>
-

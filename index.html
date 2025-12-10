@@ -3,62 +3,77 @@
 <head>
     <title>Generador de Imágenes con Gemini</title>
     <style>
-        body { font-family: Arial; padding: 20px; }
-        textarea { width: 100%; height: 100px; }
+        body { font-family: Arial; padding: 20px; max-width: 600px; margin: auto; }
+        textarea { width: 100%; height: 120px; font-size: 16px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
         img { margin-top: 20px; max-width: 100%; border: 1px solid #ccc; }
-        button { padding: 10px 20px; }
     </style>
 </head>
 <body>
 
-<h1>Generador de Imágenes – Gemini 1.5 Flash</h1>
+<h1>Generador de Imágenes – Gemini AI</h1>
 <p>Escribe una descripción detallada y genera una imagen personalizada.</p>
 
-<textarea id="prompt" placeholder="Describe la imagen..."></textarea><br><br>
+<textarea id="prompt" placeholder="Describe la imagen..."></textarea>
+<br><br>
 <button id="btn">Generar imagen</button>
 
 <div id="result"></div>
 
 <script type="module">
+
+// IMPORTAR SDK
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-const API_KEY = "AIzaSyBRwBkxpOsZj7US1nIMxW0m4AZ7BH2Yldw";  // Reemplázala
-const genAI = new GoogleGenerativeAI(API_KEY);
+// INICIALIZAR CLIENTE
+const genAI = new GoogleGenerativeAI("AIzaSyBRwBkxpOsZj7US1nIMxW0m4AZ7BH2Yldw");
 
-document.getElementById("btn").onclick = generateImage;
+// MODELO DE IMAGEN (VALIDADO)
+const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-flash"
+});
 
+// FUNCIÓN PARA GENERAR
 async function generateImage() {
     const prompt = document.getElementById("prompt").value;
     const resultDiv = document.getElementById("result");
+
     resultDiv.innerHTML = "<p>Generando imagen...</p>";
 
     try {
-        const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash"
-        });
-
         const response = await model.generateContent({
-            contents: [
-                {
-                    role: "user",
-                    parts: [{ text: prompt }]
-                }
-            ],
+            contents: [{
+                role: "user",
+                parts: [{
+                    text: `Genera una imagen realista en formato base64 basada en esta descripción: ${prompt}`
+                }]
+            }],
             generationConfig: {
-                responseMimeType: "image/png"
+                responseMimeType: "application/json"  // NECESARIO
             }
         });
 
-        const base64 =
-            response.response.candidates[0].content.parts[0].inlineData.data;
+        // Extraer imagen del JSON
+        const json = JSON.parse(response.response.text());
 
-        resultDiv.innerHTML = `<img src="data:image/png;base64,${base64}" />`;
+        if (!json.image_base64) {
+            resultDiv.innerHTML = "<p>Error: el modelo no devolvió imagen.</p>";
+            return;
+        }
 
-    } catch (e) {
-        console.error(e);
-        resultDiv.innerHTML = "<p>Error al generar la imagen.</p>";
+        resultDiv.innerHTML = `
+            <img src="data:image/png;base64,${json.image_base64}" />
+        `;
+
+    } catch (err) {
+        resultDiv.innerHTML = "<p>Error generando la imagen.</p>";
+        console.error(err);
     }
 }
+
+// Asignar botón
+document.getElementById("btn").onclick = generateImage;
+
 </script>
 
 </body>
